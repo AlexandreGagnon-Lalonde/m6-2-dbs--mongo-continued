@@ -1,39 +1,40 @@
-const fs = require("file-system");
-const { MongoClient } = require("mongodb");
-require("dotenv").config();
-const { MONGO_URI } = process.env;
-const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-};
-const assert = require("assert");
-// MONGO ^^
+// const fs = require("file-system");
+// const { MongoClient } = require("mongodb");
+// require("dotenv").config();
+// const { MONGO_URI } = process.env;
+// const options = {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// };
+// const assert = require("assert");
+// // MONGO ^^
 
 const router = require("express").Router();
+const { getSeats } = require('./handlers');
 
 const NUM_OF_ROWS = 8;
 const SEATS_PER_ROW = 12;
 
-// Code that is generating the seats.
-// ----------------------------------
-const seats = {};
-const row = ["A", "B", "C", "D", "E", "F", "G", "H"];
-for (let r = 0; r < row.length; r++) {
-  for (let s = 1; s < 13; s++) {
-    seats[`${row[r]}-${s}`] = {
-      price: 225,
-      isBooked: false,
-    };
-  }
-}
-const seatsArray = [];
-Object.keys(seats).forEach((seat) => {
-  seatsArray.push({
-    _id: seat,
-    ...seats[seat],
-  });
-});
-// ----------------------------------
+// // Code that is generating the seats.
+// // ----------------------------------
+// const seats = {};
+// const row = ["A", "B", "C", "D", "E", "F", "G", "H"];
+// for (let r = 0; r < row.length; r++) {
+//   for (let s = 1; s < 13; s++) {
+//     seats[`${row[r]}-${s}`] = {
+//       price: 225,
+//       isBooked: false,
+//     };
+//   }
+// }
+// const seatsArray = [];
+// Object.keys(seats).forEach((seat) => {
+//   seatsArray.push({
+//     _id: seat,
+//     ...seats[seat],
+//   });
+// });
+// // ----------------------------------
 //////// HELPERS
 const getRowName = (rowIndex) => {
   return String.fromCharCode(65 + rowIndex);
@@ -58,20 +59,7 @@ const randomlyBookSeats = (num) => {
 
 let state;
 
-router.get("/api/seat-availability", async (req, res) => {
-  if (!state) {
-    state = {
-      bookedSeats: randomlyBookSeats(30),
-    };
-  }
-
-  return res.json({
-    seats: seats,
-    bookedSeats: state.bookedSeats,
-    numOfRows: 8,
-    seatsPerRow: 12,
-  });
-});
+router.get("/api/seat-availability", getSeats);
 
 let lastBookingAttemptSucceeded = false;
 
@@ -120,21 +108,21 @@ router.post("/api/book-seat", async (req, res) => {
 
 module.exports = router;
 
-const batchImport = async (req, res) => {
-  const client = await MongoClient(MONGO_URI, options);
-  try {
-    await client.connect();
+// const batchImport = async (req, res) => {
+//   const client = await MongoClient(MONGO_URI, options);
+//   try {
+//     await client.connect();
+  // poor choice of databse name... 
+//     const db = client.db("6-2--exercise_1");
 
-    const db = client.db("6-2--exercise_1");
+//     const dataSeats = await db.collection("seats").insertMany(seatsArray);
+//     assert.equal(seatsArray.length, dataSeats.insertedCount);
 
-    const dataSeats = await db.collection("seats").insertMany(seatsArray);
-    assert.equal(seatsArray.length, dataSeats.insertedCount);
-
-    console.log("success");
-  } catch (err) {
-    console.log(err.message);
-  }
-  client.close();
-};
+//     console.log("success");
+//   } catch (err) {
+//     console.log(err.message);
+//   }
+//   client.close();
+// };
 
 // batchImport();
