@@ -29,4 +29,18 @@ const getSeats = async (req, res) => {
   client.close();
 };
 
+const updateSeat = async (req, res) => {
+  const client = await MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+
+    const db = client.db('6-2--exercise_1');
+
+    
+  } catch (err) {
+    res.status(500).json({ status: 500, message: err.message });
+  }
+  client.close();
+}
+
 module.exports = { getSeats };
