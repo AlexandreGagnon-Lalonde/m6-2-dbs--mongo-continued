@@ -1,3 +1,14 @@
+const fs = require("file-system");
+const { MongoClient } = require("mongodb");
+require("dotenv").config();
+const { MONGO_URI } = process.env;
+const options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+};
+const assert = require("assert");
+// MONGO ^^
+
 const router = require("express").Router();
 
 const NUM_OF_ROWS = 8;
@@ -15,6 +26,13 @@ for (let r = 0; r < row.length; r++) {
     };
   }
 }
+const seatsArray = [];
+Object.keys(seats).forEach((seat) => {
+  seatsArray.push({
+    _id: seat,
+    ...seats[seat],
+  });
+});
 // ----------------------------------
 //////// HELPERS
 const getRowName = (rowIndex) => {
@@ -101,3 +119,22 @@ router.post("/api/book-seat", async (req, res) => {
 });
 
 module.exports = router;
+
+const batchImport = async (req, res) => {
+  const client = await MongoClient(MONGO_URI, options);
+  try {
+    await client.connect();
+
+    const db = client.db("6-2--exercise_1");
+
+    const dataSeats = await db.collection("seats").insertMany(seatsArray);
+    assert.equal(seatsArray.length, dataSeats.insertedCount);
+
+    console.log("success");
+  } catch (err) {
+    console.log(err.message);
+  }
+  client.close();
+};
+
+// batchImport();
