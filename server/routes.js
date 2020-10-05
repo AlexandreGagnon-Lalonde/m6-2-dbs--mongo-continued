@@ -9,7 +9,12 @@ const assert = require("assert");
 // // MONGO ^^
 
 const router = require("express").Router();
-const { getSeats, updateSeat } = require("./handlers");
+const {
+  getSeats,
+  updateSeat,
+  updateUser,
+  deleteBooking,
+} = require("./handlers");
 
 // Code that is generating the seats.
 // ----------------------------------
@@ -31,13 +36,17 @@ Object.keys(seats).forEach((seat) => {
     ...seats[seat],
   });
 });
-console.log(seatsArray)
+console.log(seatsArray);
 // ----------------------------------
 //////// HELPERS
 
 router.get("/api/seat-availability", getSeats);
 
 router.post("/api/book-seat", updateSeat);
+
+router.put("/api/update-user", updateUser);
+
+router.put("/api/delete-booking", deleteBooking);
 
 module.exports = router;
 

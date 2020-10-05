@@ -50,7 +50,15 @@ const updateSeat = async (req, res) => {
       // create query with mongo property
       const query = { _id: seatId };
       // value for true and false
-      const newValueTrue = { $set: { isBooked: true, fullName, email } };
+      const newValueTrue = {
+        $set: {
+          isBooked: true,
+          customer: {
+            fullName,
+            email,
+          },
+        },
+      };
       const newValueFalse = { $set: { isBooked: false } };
       // connect client
       await client.connect();
@@ -83,4 +91,73 @@ const updateSeat = async (req, res) => {
   client.close();
 };
 
-module.exports = { getSeats, updateSeat };
+const deleteBooking = async (req, res) => {
+  const { seatId } = req.body;
+
+  try {
+    const client = await MongoClient(MONOGO_URI, options);
+
+    const query = { _id: seatId };
+
+    const newValue = { $set: { isBooked: false, customer: null } };
+
+    await client.connect();
+
+    const db = client.db("6.2");
+
+    const booking = await db.collection("seats").updateOne(query, newValue);
+
+    assert.equal(1, booking.matchedCount);
+    assert.equal(1, booking.modifiedCount);
+
+    res.status(204).json({ status: 204 });
+  } catch (err) {
+    res.status(500).json({ status: 500, message: err.message });
+  }
+  client.close();
+};
+
+const updateUser = async (req, res) => {
+  const client = MongoClient(MONGO_URI, options);
+
+  try {
+    const { fullName } = req.body;
+    const query = { fullName };
+    const newValuesUser = {
+      $set: {
+        fullName: "new name",
+        email: "new email",
+      },
+    };
+    const newValuesSeat = {
+      $set: {
+        customer: {
+          fullName: "new name",
+          email: "new email",
+        },
+      },
+    };
+
+    await client.connect();
+
+    const db = client.db("6.2");
+    const seatData = await db
+      .collection("seats")
+      .updateOne(query, newValuesSeat);
+    assert.equal(1, seatData.matchedCount);
+    assert.equal(1, seatData.modifiedCount);
+
+    const userData = await db
+      .collection("users")
+      .updateOne(query, newValuesUser);
+    assert.equal(1, userData.matchedCount);
+    assert.equal(1, userData.modifiedCount);
+
+    res.status(204).json({ status: 204 });
+  } catch (err) {
+    res.status(500).json({ status: 500, message: err.message });
+  }
+  client.close();
+};
+
+module.exports = { getSeats, updateSeat, updateUser, deleteBooking };
